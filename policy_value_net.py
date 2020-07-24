@@ -6,10 +6,14 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
 def set_learning_rate(optimizer, lr):
     """设置学习率"""
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -72,7 +76,7 @@ class policy_value_net(nn.Module):
         self.bn3 = nn.BatchNorm2d(2)
         self.fc3 = nn.Linear(162, 140)
 
-    def forward(self,x):
+    def forward(self, x):
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
@@ -96,7 +100,7 @@ class policy_value_net(nn.Module):
         # policy_out = F.log_softmax(self.fc3(policy_out), dim=1)  # softmax+log pytorch 0.4 支持dim
         policy_out = F.log_softmax(self.fc3(policy_out))
 
-        return policy_out,value_out
+        return policy_out, value_out
 
 # device = torch.device("cpu")
 # x = torch.Tensor(4,26,9,9).to(device)
@@ -109,20 +113,24 @@ class policy_value_net(nn.Module):
 
 class PolicyValueNet(object):
     """策略价值网络 """
-    def __init__(self,model_file=None, use_gpu=True):
+
+    def __init__(self, model_file=None, use_gpu=True):
         self.use_gpu = use_gpu
         self.l2_const = 1e-4  # 正则化系数
         if self.use_gpu:
             # device = torch.device("cuda:0")
-            self.policy_value_net = policy_value_net(BasicBlock,26,64).cuda()
+            self.policy_value_net = policy_value_net(
+                BasicBlock, 26, 64).to(device)
         else:
             # device = torch.device("cpu")
-            self.policy_value_net = policy_value_net(BasicBlock,26,64)
+            self.policy_value_net = policy_value_net(BasicBlock, 26, 64)
 
-        self.optimizer = optim.Adam(self.policy_value_net.parameters(), weight_decay=self.l2_const)
+        self.optimizer = optim.Adam(
+            self.policy_value_net.parameters(), weight_decay=self.l2_const)
 
         if model_file:
-            self.policy_value_net.load_state_dict(torch.load('ckpt/%s.pth'% model_file))
+            self.policy_value_net.load_state_dict(
+                torch.load('ckpt/%s.pth' % model_file))
 
     def policy_value(self, state_batch):
         """
@@ -131,7 +139,7 @@ class PolicyValueNet(object):
         """
         if self.use_gpu:
             # device = torch.device("cuda:0")
-            state_batch = Variable(torch.FloatTensor(state_batch).cuda())
+            state_batch = Variable(torch.FloatTensor(state_batch).to(device))
             log_act_probs, value = self.policy_value_net(state_batch)
             act_probs = np.exp(log_act_probs.data.cpu().numpy())
             return act_probs, value.data.cpu().numpy()
@@ -148,14 +156,17 @@ class PolicyValueNet(object):
         输出：一个列表，由每一个可用落子的(action, probability)和棋盘状态价值组成
         """
         legal_positions = game.actions()  # 策略价值网络输出的是所有的落子概率，所以你需要剔除已落子的位置
-        current_state = np.ascontiguousarray(game.state()).reshape([1,26,9,9])
+        current_state = np.ascontiguousarray(
+            game.state()).reshape([1, 26, 9, 9])
         if self.use_gpu:
             # device = torch.device("cuda:0")
-            log_act_probs, value = self.policy_value_net(Variable(torch.from_numpy(current_state)).cuda().float())
+            log_act_probs, value = self.policy_value_net(
+                Variable(torch.from_numpy(current_state)).to(device).float())
             act_probs = np.exp(log_act_probs.data.cpu().numpy().flatten())
         else:
             # device = torch.device("cpu")
-            log_act_probs, value = self.policy_value_net(Variable(torch.from_numpy(current_state)).float())
+            log_act_probs, value = self.policy_value_net(
+                Variable(torch.from_numpy(current_state)).float())
             act_probs = np.exp(log_act_probs.data.numpy().flatten())
         # print("legal:",legal_positions)
         # print("probs:", act_probs)
@@ -166,9 +177,9 @@ class PolicyValueNet(object):
     def train_step(self, state_batch, mcts_probs, winner_batch, lr):
         if self.use_gpu:
             # device = torch.device("cuda:0")
-            state_batch = Variable(torch.FloatTensor(state_batch).cuda())
-            mcts_probs = Variable(torch.FloatTensor(mcts_probs).cuda())
-            winner_batch = Variable(torch.FloatTensor(winner_batch).cuda())
+            state_batch = Variable(torch.FloatTensor(state_batch).to(device))
+            mcts_probs = Variable(torch.FloatTensor(mcts_probs).to(device))
+            winner_batch = Variable(torch.FloatTensor(winner_batch).to(device))
         else:
             # device = torch.device("cpu")
             state_batch = Variable(torch.FloatTensor(state_batch))
@@ -188,7 +199,8 @@ class PolicyValueNet(object):
         loss.backward()
         self.optimizer.step()
         # 计算熵，只是用于监控
-        entropy = -torch.mean(torch.sum(torch.exp(log_act_probs) * log_act_probs, 1))
+        entropy = - \
+            torch.mean(torch.sum(torch.exp(log_act_probs) * log_act_probs, 1))
         return loss.data[0], entropy.data[0]
 
     def get_policy_param(self):
@@ -197,6 +209,5 @@ class PolicyValueNet(object):
 
     def save_model(self, model_file):
         """ 保存模型"""
-        torch.save(self.policy_value_net.state_dict(), 'ckpt/%s.pth'%(model_file))
-
-
+        torch.save(self.policy_value_net.state_dict(),
+                   'ckpt/%s.pth' % (model_file))

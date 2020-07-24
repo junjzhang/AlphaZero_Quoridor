@@ -48,13 +48,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--player_type", type=int, default=1,
                         help="palyer type you want to fight,1 is human,2 is computer")
-    parser.add_argument("--computer_type", type=int, default=0, help="computer type,1 is Alpha MCTS,2 is pure MCTS")
+    parser.add_argument("--computer_type", type=int, default=0,
+                        help="computer type,1 is Alpha MCTS,2 is pure MCTS")
     args = parser.parse_args()
 
     game = Quoridor()
     human1 = ManualPygameAgent('Kurumi')
     human2 = ManualPygameAgent('Cryer')
-    MCTS_Alpha = A_Player(PolicyValueNet().policy_value_fn, c_puct=5, n_playout=30, is_selfplay=0)
+    MCTS_Alpha = A_Player(PolicyValueNet().policy_value_fn,
+                          c_puct=5, n_playout=30, is_selfplay=0)
     MCTS_Pure = B_Player(c_puct=5, n_playout=50)  # 50层400秒
 
     if args.player_type == 1:
@@ -117,11 +119,13 @@ def main():
                             players[game.current_player].receive_action(action)
                             player_moved = True
                             break
-                        if player_moved: break
+                        if player_moved:
+                            break
                     # if player_moved: break
                     # 添加
                     if player_moved:
-                        real_action = players[game.current_player].choose_action()
+                        real_action = players[game.current_player].choose_action(
+                        )
                         # move_history.append(real_action)
                         done, winner = game.step(real_action)
                         render(game, screen)  # 渲染游戏
@@ -130,12 +134,14 @@ def main():
                     for rect, collide_points, action in valid_walls:
                         for collides in collide_points:
                             if collides.collidepoint(touch):
-                                players[game.current_player].receive_action(action)
+                                players[game.current_player].receive_action(
+                                    action)
                                 player_moved = True
                                 break
                         # 修改
                         if player_moved == True:
-                            real_action = players[game.current_player].choose_action()
+                            real_action = players[game.current_player].choose_action(
+                            )
                             # move_history.append(real_action)
                             done, winner = game.step(real_action)
                             render(game, screen)  # 渲染游戏
@@ -154,7 +160,8 @@ def main():
             real_action = players[game.current_player].choose_action(game)
             # move_history.append(real_action)
             toc = time.time()
-            print("MCTS choose action:", real_action, "  ,spend %s seconds" % str(toc - tic))
+            print("MCTS choose action:", real_action,
+                  "  ,spend %s seconds" % str(toc - tic))
             done, winner = game.step(real_action)
             # render(game, screen)
             # valid_actions = game.valid_actions
@@ -162,7 +169,8 @@ def main():
         #     text(screen, text, position1=2, position2=0.8, color=BLUE)
 
         if done:
-            print("game over! winner is %s player:%s" % (player_types[winner], winner))
+            print("game over! winner is %s player:%s" %
+                  (player_types[winner], winner))
             break
 
     t2 = time.time()
@@ -253,14 +261,17 @@ def draw_game(game, screen, valid_actions):
             else:
                 # Collide rectangles for highlighting the walls on hover
                 collide_top = pygame.Rect(TILE_WIDTH + (TILE_WIDTH + WALL_WIDTH) * column,
-                                          (TILE_HEIGHT + WALL_WIDTH) * (7 - row) + TILE_HEIGHT / 2,
+                                          (TILE_HEIGHT + WALL_WIDTH) *
+                                          (7 - row) + TILE_HEIGHT / 2,
                                           WALL_WIDTH,
                                           TILE_HEIGHT / 2)
                 pygame.draw.rect(screen, BLACK, collide_top)
                 collide_points.append(collide_top)
 
                 collide_bottom = pygame.Rect(TILE_WIDTH + (TILE_WIDTH + WALL_WIDTH) * column,
-                                             (TILE_HEIGHT + WALL_WIDTH) * (7 - row) + TILE_HEIGHT + WALL_WIDTH,
+                                             (TILE_HEIGHT + WALL_WIDTH) *
+                                             (7 - row) +
+                                             TILE_HEIGHT + WALL_WIDTH,
                                              WALL_WIDTH,
                                              TILE_HEIGHT / 2)
                 pygame.draw.rect(screen, BLACK, collide_bottom)
@@ -273,7 +284,8 @@ def draw_game(game, screen, valid_actions):
     for row in range(8):
         for column in range(8):
             rect = pygame.Rect((TILE_HEIGHT + WALL_WIDTH) * column,
-                               TILE_HEIGHT + (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
+                               TILE_HEIGHT +
+                               (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
                                WALL_HEIGHT,
                                WALL_WIDTH)
             if game._intersections[row * 8 + column] == 1:
@@ -283,7 +295,8 @@ def draw_game(game, screen, valid_actions):
                 collide_points = []
 
                 collide_left = pygame.Rect((TILE_HEIGHT + WALL_WIDTH) * column + TILE_WIDTH / 2,
-                                           TILE_HEIGHT + (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
+                                           TILE_HEIGHT +
+                                           (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
                                            TILE_WIDTH / 2,
                                            WALL_WIDTH)
 
@@ -291,14 +304,16 @@ def draw_game(game, screen, valid_actions):
                 collide_points.append(collide_left)
 
                 collide_right = pygame.Rect((TILE_HEIGHT + WALL_WIDTH) * column + TILE_WIDTH + WALL_WIDTH,
-                                            TILE_HEIGHT + (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
+                                            TILE_HEIGHT +
+                                            (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
                                             TILE_WIDTH / 2,
                                             WALL_WIDTH)
                 pygame.draw.rect(screen, BLACK, collide_right)
                 collide_points.append(collide_right)
 
             rect = pygame.Rect((TILE_HEIGHT + WALL_WIDTH) * (column),
-                               TILE_HEIGHT + (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
+                               TILE_HEIGHT +
+                               (TILE_HEIGHT + WALL_WIDTH) * (7 - row),
                                WALL_HEIGHT,
                                WALL_WIDTH)
 
@@ -311,10 +326,12 @@ def draw_game(game, screen, valid_actions):
     # Draw Walls Remaining
     font = pygame.font.SysFont("arial", 18)
 
-    player1_walls = font.render("Walls Remaining: {player1}".format(player1=game._player1_walls_remaining), 1, BLUE)
+    player1_walls = font.render("Walls Remaining: {player1}".format(
+        player1=game._player1_walls_remaining), 1, BLUE)
     player1_text_position = SCREEN_HEIGHT + 2, SCREEN_HEIGHT * 0.9
 
-    player2_walls = font.render("Walls Remaining: {player2}".format(player2=game._player2_walls_remaining), 1, RED)
+    player2_walls = font.render("Walls Remaining: {player2}".format(
+        player2=game._player2_walls_remaining), 1, RED)
     player2_text_position = SCREEN_HEIGHT + 2, SCREEN_HEIGHT * 0.1
 
     move_history = []
@@ -340,4 +357,3 @@ def draw_load_screen(screen):
 
 if __name__ == '__main__':
     main()
-

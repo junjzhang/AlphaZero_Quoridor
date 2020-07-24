@@ -2,6 +2,7 @@ import numpy as np
 from queue import Queue
 import time
 
+
 class Quoridor(object):
     HORIZONTAL = 1
     VERTICAL = -1
@@ -114,7 +115,8 @@ class Quoridor(object):
             # print('Shape is {shape}'.format(shape=state.shape))
 
             current_player_plane = np.zeros([1, 9, 9])
-            state = np.vstack([state, player1_walls_plane, player2_walls_plane, current_player_plane])
+            state = np.vstack([state, player1_walls_plane,
+                               player2_walls_plane, current_player_plane])
 
         if self.current_player == 2:
             state = np.stack([
@@ -126,7 +128,8 @@ class Quoridor(object):
             ])
 
             current_player_plane = np.ones([1, 9, 9])
-            state = np.vstack([state, player2_walls_plane, player1_walls_plane, current_player_plane])
+            state = np.vstack([state, player2_walls_plane,
+                               player1_walls_plane, current_player_plane])
             # print(state.shape)
         return state
 
@@ -147,7 +150,7 @@ class Quoridor(object):
                                                 opponent_loc=opponent_loc, walls=walls, player=player)
         # 如果当前为玩家1并且还有挡板，或者玩家为2，并且还有挡板，则获取挡板的合法动作空间
         if ((self.current_player == 1 and self._player1_walls_remaining > 0)
-            or (self.current_player == 2 and self._player2_walls_remaining > 0)):
+                or (self.current_player == 2 and self._player2_walls_remaining > 0)):
             wall_actions = self._valid_wall_actions()  # 获得合法挡板动作空间
 
             # 调整+12   因为前12个是棋子动作 4+8
@@ -166,7 +169,8 @@ class Quoridor(object):
 
         if self.safe:
             if not action in self.valid_actions:
-                raise ValueError("Invalid Action: {action}".format(action=action))
+                raise ValueError(
+                    "Invalid Action: {action}".format(action=action))
 
         if action < 12:
             self._handle_pawn_action(action, player)
@@ -183,7 +187,7 @@ class Quoridor(object):
             # observation = self.state()
             # print("game over !winner is player" + str(winner))
 
-        return done
+        return done, winner
 
     # 判断游戏是否结束
     def game_end(self):
@@ -240,7 +244,8 @@ class Quoridor(object):
         elif action == self._DIRECTIONS['SE']:
             self._positions[player] -= 8
         else:
-            raise ValueError("Invalid Pawn Action: {action}".format(action=action))
+            raise ValueError(
+                "Invalid Pawn Action: {action}".format(action=action))
 
     # 处理挡板动作
     def _handle_wall_action(self, action):
@@ -292,11 +297,15 @@ class Quoridor(object):
         # 判断西面没有竖直挡板和对面棋子
         w = intersections['NW'] != VERTICAL and intersections['SW'] != VERTICAL and not opponent_west
         # 向北走，两种情况：1，按照上面的判断可走 2，虽到边界但是再走可以获胜
-        if n or (player == 1 and current_row == 8): valid.append(self._DIRECTIONS['N'])
+        if n or (player == 1 and current_row == 8):
+            valid.append(self._DIRECTIONS['N'])
         # 同理
-        if s or (player == 2 and current_row == 0): valid.append(self._DIRECTIONS['S'])
-        if e: valid.append(self._DIRECTIONS['E'])
-        if w: valid.append(self._DIRECTIONS['W'])
+        if s or (player == 2 and current_row == 0):
+            valid.append(self._DIRECTIONS['S'])
+        if e:
+            valid.append(self._DIRECTIONS['E'])
+        if w:
+            valid.append(self._DIRECTIONS['W'])
         # 如果北面有对手棋子并且北面没有水平挡板
         if opponent_north and intersections['NE'] != HORIZONTAL and intersections['NW'] != HORIZONTAL:
             # 获取对手周围的挡板信息
@@ -313,7 +322,6 @@ class Quoridor(object):
             if n_intersections['NW'] != VERTICAL and intersections['NW'] != VERTICAL:
                 valid.append(self._DIRECTIONS['NW'])
 
-
         elif opponent_south and intersections['SE'] != HORIZONTAL and intersections['SW'] != HORIZONTAL:
             s_intersections = self._get_intersections(walls, opponent_loc)
             if s_intersections['SW'] != HORIZONTAL and s_intersections['SE'] != HORIZONTAL \
@@ -326,7 +334,6 @@ class Quoridor(object):
             if s_intersections['SW'] != VERTICAL and intersections['SW'] != VERTICAL:
                 valid.append(self._DIRECTIONS['SW'])
 
-
         elif opponent_east and intersections['SE'] != VERTICAL and intersections['NE'] != VERTICAL:
             e_intersections = self._get_intersections(walls, opponent_loc)
             if e_intersections['SE'] != VERTICAL and e_intersections['NE'] != VERTICAL:
@@ -337,7 +344,6 @@ class Quoridor(object):
 
             if e_intersections['SE'] != HORIZONTAL:
                 valid.append(self._DIRECTIONS['SE'])
-
 
         elif opponent_west and intersections['SW'] != VERTICAL and intersections['NW'] != VERTICAL:
             w_intersections = self._get_intersections(walls, opponent_loc)
@@ -367,15 +373,19 @@ class Quoridor(object):
             if w_border:
                 nw_intersection = -1
                 sw_intersection = -1
-                se_intersection = intersections[(current_tile - 9) - (location_row - 1)]
+                se_intersection = intersections[(
+                    current_tile - 9) - (location_row - 1)]
             elif e_border:
                 nw_intersection = 1
                 se_intersection = -1
-                sw_intersection = intersections[(current_tile - 9) - (location_row - 1) - 1]
+                sw_intersection = intersections[(
+                    current_tile - 9) - (location_row - 1) - 1]
             else:
                 nw_intersection = 1
-                sw_intersection = intersections[(current_tile - 9) - (location_row - 1) - 1]
-                se_intersection = intersections[(current_tile - 9) - (location_row - 1)]
+                sw_intersection = intersections[(
+                    current_tile - 9) - (location_row - 1) - 1]
+                se_intersection = intersections[(
+                    current_tile - 9) - (location_row - 1)]
         elif s_border:
             sw_intersection = 1
             if w_border:
@@ -391,26 +401,29 @@ class Quoridor(object):
                 ne_intersection = intersections[current_tile - location_row]
                 nw_intersection = ne_intersection = intersections[current_tile - location_row - 1]
 
-
         # West but not north or south
         elif w_border:
             nw_intersection = -1
             sw_intersection = -1
             ne_intersection = intersections[current_tile - location_row]
-            se_intersection = intersections[(current_tile - 9) - (location_row - 1)]
+            se_intersection = intersections[(
+                current_tile - 9) - (location_row - 1)]
 
         elif e_border:
             ne_intersection = -1
             se_intersection = -1
             nw_intersection = intersections[current_tile - location_row - 1]
-            sw_intersection = intersections[(current_tile - 9) - (location_row - 1) - 1]
+            sw_intersection = intersections[(
+                current_tile - 9) - (location_row - 1) - 1]
 
         # No borders
         else:
             ne_intersection = intersections[current_tile - location_row]
             nw_intersection = intersections[current_tile - location_row - 1]
-            sw_intersection = intersections[(current_tile - 9) - (location_row - 1) - 1]
-            se_intersection = intersections[(current_tile - 9) - (location_row - 1)]
+            sw_intersection = intersections[(
+                current_tile - 9) - (location_row - 1) - 1]
+            se_intersection = intersections[(
+                current_tile - 9) - (location_row - 1)]
 
         return {'NW': nw_intersection,
                 'NE': ne_intersection,
@@ -471,8 +484,10 @@ class Quoridor(object):
         intersections[wall_location] = orientation
 
         # BFS to target row
-        player1_valid = self._bfs_to_goal(intersections, player1_target, player1_position, player2_position, player=1)
-        player2_valid = self._bfs_to_goal(intersections, player2_target, player2_position, player1_position, player=2)
+        player1_valid = self._bfs_to_goal(
+            intersections, player1_target, player1_position, player2_position, player=1)
+        player2_valid = self._bfs_to_goal(
+            intersections, player2_target, player2_position, player1_position, player=2)
 
         return not (player1_valid and player2_valid)
 
@@ -544,7 +559,8 @@ class Quoridor(object):
         dash = '-'
         none = ''
 
-        grid = [['{dash:4}'.format(dash=dash) for i in range(9)] for i in range(9)]
+        grid = [['{dash:4}'.format(dash=dash)
+                 for i in range(9)] for i in range(9)]
         i_reshaped = self._intersections.reshape([8, 8])
 
         grid[player1_row][player1_col] = '{x:4}'.format(x=x)
@@ -570,6 +586,7 @@ class Quoridor(object):
     def clone(self):
         return Quoridor()
     # 自博弈一次
+
     def start_self_play(self, player, is_shown=0, temp=1e-3):
         """
          开始自博弈，也就是蒙特卡洛树搜索和蒙特卡洛树搜索之间的对抗。
@@ -582,9 +599,11 @@ class Quoridor(object):
         while(1):   # 循环进行自博弈
             # 待修改
             tic = time.time()
-            move, move_probs = player.choose_action(self, temp=temp, return_prob=1)  # 获取落子以及概率
+            move, move_probs = player.choose_action(
+                self, temp=temp, return_prob=1)  # 获取落子以及概率
             toc = time.time()
-            print("player %s  chosed move : %s ,prob: %.3f  spend: %.2f seconds" % (self.current_player, move, move_probs[move], (toc-tic)))
+            print("player %s  chosed move : %s ,prob: %.3f  spend: %.2f seconds" % (
+                self.current_player, move, move_probs[move], (toc-tic)))
             # 保存数据
             states.append(self.state())
             mcts_probs.append(move_probs)
@@ -598,8 +617,10 @@ class Quoridor(object):
                 # 判断游戏是否结束 ，始终以当前玩家视角保存数据
                 winners_z = np.zeros(len(current_players))
                 if winner != -1:
-                    winners_z[np.array(current_players) == winner] = 1.0        # 当前玩家的所有落子的z都设为1
-                    winners_z[np.array(current_players) != winner] = -1.0       # 对手玩家的所有落子的z都设为-1
+                    # 当前玩家的所有落子的z都设为1
+                    winners_z[np.array(current_players) == winner] = 1.0
+                    # 对手玩家的所有落子的z都设为-1
+                    winners_z[np.array(current_players) != winner] = -1.0
                 # 重置MCTS节点
                 player.reset_player()
                 if is_shown:
